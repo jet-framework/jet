@@ -1,0 +1,84 @@
+Problems:
+
+Tuples
+- How can tuples be reduced? Tuples are case classes with fields.
+Would have to generate classes that extend them and implement special
+serialization for these classes.
+
+Either:
+class Tuple2_Int_String_1(val x : Int) extends Tuple2[Int, String](x, null)
+
+class Tuple2_Int_String_1(val x : Int) extends Tuple2[Int, String](x, null)
+kryo.register(Tuple2_Int_String_1.class, new SimpleSerializer<Tuple2_Int_String_1>() {
+        public void write (ByteBuffer buffer, Tuple2_Int_String_1 tuple) {
+                buffer.putInt(color._1);
+        }
+        public Tuple2_Int_String_1 read (ByteBuffer buffer) {
+                return new Tuple2_Int_String_1(buffer.getInt());
+        }
+});
+
+=> Requires:
+- Serialization implementation for all backends for narrowed tuples
+- Default value per type: null for reference types, 0 for numbers?
+- Tuple Type generation with right names and types (no problem)
+
+OR:
+An ugly hack, meaning that tuples will always use all their fields
+
+Decisions to take:
+- Tuples => Unimportant for now, leave as is
+
+BUGS:
+- Handling of nested tuples
+
+TODO List:
+- Refine finding of locations for inserting narrowing vectormaps.
+	- Check all nodes which preserve types but do not want a narrowing themselves (flatten, filter, not cache).
+	- If the input is a map, don't insert one. The map has either been narrowed or doesn't need it.
+	- If the input is a filter, check if the filter adds field reads. Continue looking for inputs.
+	- If the input is a flatmap, insert one? FlatMaps are not handled by our scheme.
+	- if its GBK or reduce????? => GBK wants a narrower itself, abort. Reduce may add field reads, but also changes types.
+	- if its flatten? Go on, until a stop node is found on each one. Maybe insert narrowing before flatten instead of after, if only one type changes.
+- Find benchmarks and implement them => Flushes out bugs.
+- Saving of nested tuples does not return all elements yet within
+	- creates problem in other cases as well
+- Unit Tests. 
+	- Field analysis & narrowing
+	- Transformers & dependency pulling 
+	- Tests that check if the generated code compiles.
+- Compile external source files, like delite
+- move filter before join (if dependant on key or one value) or group and reduce (if dependant on key)
+
+Other functions:
+- ReduceToOne: Both scoobi and spark have this, easy for hadoop
+- cogroup: Spark calls this x1.groupWith(x2), scoobi calls it coGroup(l1, l2)
+- distinct: scoobi has this, spark doesnt.
+
+iterative constructs with VectorNode inside:
+- Would enable many spark benchmarks
+- Would enable pagerank, one of the most important ones
+- would need some var in main body
+- Assumption that VectorNodes are always on top level is not correct anymore, lots of changes.
+sum or avg on iterables:
+- TPCH usually need this.
+- maybe can provide sum or avg and let LMS fuse the loops
+=> Would need a small collection library. List, iterable with map, filter, fold
+=> Would need analysis, map, fold etc for iterable
+
+Would be nice:
+- merge filters
+- Get Spark build running (wait for 0.12 sbt?)
+- Convert this file to markdown?
+
+
+Easy, low priority tasks:
+- Add Tuple3, 4 etc
+- Extend String class with more methods (indexOf, takeWhile)
+- Spark reduce by key optimization: Allow if all readers of group by key are reduces
+- Refactor field reads to use a list as representation instead of the string
+- Make list of all metaInfos keys (narrowed, narrower etc) of a VectorNode 
+
+To ask tiark:
+- Compile external source files? => Investigate self first.
+- How to handle tuples correctly that have one non-rep value? Added a converter in TupleOps, but this creates different problems.

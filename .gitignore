@@ -1,0 +1,8 @@
+bin/
+target/
+/deps/
+generated/
+/pig/pig_*.log
+/benchmarking/dcdsl.generated*.txt
+/benchmarking/progs/
+
