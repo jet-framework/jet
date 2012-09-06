@@ -29,6 +29,8 @@ This library is not (yet) meant for public usage. It is more of a prototype than
 
 ####Getting started:
 The framework depends on the customized version of Lightweight Modular Staging framework. To initialize it invoke:
+
+    mkdir virtualization-lms-core
     git submodule init
     git submodule update
 
