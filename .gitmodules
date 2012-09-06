@@ -1,4 +1,3 @@
-[submodule "virtualization-lms-core"]
-	path = virtualization-lms-core
+[submodule "virtuailzation-lms-core"]
+	path = virtuailzation-lms-core
 	url = git://github.com/Stivo/virtualization-lms-core.git
-
